@@ -57,7 +57,8 @@ npx -y github:GladysAssistant/integration-store --skip-image-check .
 ```
 
 The ESC/POS commands are written by hand in `src/escpos/` (no dependency
-besides the Gladys SDK). The tests run the integration against the SDK's fake
+besides the Gladys SDK). `test/fixtures/tickets/render.py` decodes recorded
+jobs and renders them as PNG (Python, Pillow, qrcode). The tests run the integration against the SDK's fake
 Gladys and fake printers on the loopback. See `CLAUDE.md` for the
 architecture.
 

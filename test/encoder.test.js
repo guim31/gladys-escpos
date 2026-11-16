@@ -129,3 +129,28 @@ test('the code page tables have 128 entries and the expected ESC t numbers', () 
     { cp437: 0, cp850: 2, cp858: 19, wpc1252: 16, ascii: null },
   );
 });
+
+// Bytes recorded by a fake printer container from the integration image (see
+// test/fixtures/tickets/render.py, which decodes and renders them as
+// test/fixtures/rendered-tickets.png): the encoder must keep producing them.
+test('the recorded tickets are produced byte for byte', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const fixture = (name) => readFile(new URL(`./fixtures/tickets/${name}`, import.meta.url));
+  const full = buildTicket(
+    {
+      title: 'Liste de courses',
+      titleStyle: 'large',
+      date: 'lundi 16 novembre 2026 à 17:09',
+      message:
+        'Lait demi-écrémé\\nPain complet\\nCafé, thé, crème brûlée\\nÀ prendre : œufs, 2 € de pâté « maison »\\nGrüße aus München, ¿qué tal? ñandú\\nHors table : 🙂 中文 ≠ ✓',
+      qr: 'https://gladysassistant.com',
+    },
+    options,
+  );
+  assert.deepEqual(full.bytes, await fixture('ready-01.bin'));
+  const tall = buildTicket(
+    { title: 'Bonjour la famille', titleStyle: 'tall', message: 'Je rentre à 19 h.\\nBisous' },
+    options,
+  );
+  assert.deepEqual(tall.bytes, await fixture('ready-02.bin'));
+});
