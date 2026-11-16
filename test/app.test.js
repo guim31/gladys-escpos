@@ -340,3 +340,24 @@ test('a normal cycle writes nothing at info level', async (t) => {
     [],
   );
 });
+
+test('a busy single-client printer (accepts, then closes) stays reachable', async (t) => {
+  const net = await import('node:net');
+  const sockets = new Set();
+  const server = net.createServer((socket) => {
+    sockets.add(socket);
+    socket.end();
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => {
+    sockets.forEach((socket) => socket.destroy());
+    server.close();
+  });
+  const world = await createWorld({ config: { printers: `127.0.0.1:${server.address().port}` } });
+  t.after(() => world.app.stop());
+  const id = world.gladys.devices[0].external_id;
+  assert.equal(world.fake.lastState(`${id}:online`), 1);
+  assert.equal(world.fake.lastState(`${id}:status`), STATUS_TEXT.unknown.fr);
+  const ack = await world.fake.sceneAction('print_ticket', { printer: id, message: 'x' });
+  assert.equal(ack.success, false);
+});

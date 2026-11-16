@@ -171,6 +171,9 @@ export function wrapBytes(bytes, columns) {
   let rest = bytes;
   while (rest.length > columns) {
     let cut = rest.lastIndexOf(0x20, columns);
+    if (cut > 0 && rest.slice(0, cut).every((byte) => byte === 0x20)) {
+      cut = -1; // only spaces before the break: cut the word instead
+    }
     if (cut <= 0) {
       cut = columns;
       lines.push(rest.slice(0, cut));

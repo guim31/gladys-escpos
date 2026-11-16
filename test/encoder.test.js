@@ -173,4 +173,11 @@ test('wrapped lines neither end nor start with spaces', () => {
     Buffer.from(line).toString(),
   );
   assert.deepEqual(lines, ['aaa', 'bbb']);
+  const indented = wrapBytes([...Buffer.from('  xxxxxxxx')], 5).map((line) =>
+    Buffer.from(line).toString(),
+  );
+  assert.ok(
+    indented.every((line) => line.trim() !== ''),
+    JSON.stringify(indented),
+  );
 });

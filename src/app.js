@@ -165,8 +165,15 @@ export function registerIntegration(gladys, deps = {}) {
       result = { online: true, status };
       noteReachability(device, true);
     } catch (err) {
-      result = { online: false };
-      noteReachability(device, false, err);
+      if (err instanceof PrinterError && err.kind === 'error') {
+        // It answered, then closed: busy with another client (a till), so
+        // reachable, its paper unknown this time.
+        result = { online: true, status: { answered: false } };
+        noteReachability(device, true);
+      } else {
+        result = { online: false };
+        noteReachability(device, false, err);
+      }
     }
     await record(device, target, result);
   }
