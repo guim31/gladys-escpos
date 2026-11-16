@@ -98,8 +98,9 @@ Characters a table lacks are written as close as possible (’ → ', œ → oe,
 
 - Text only: no images or logos.
 - One configuration for every printer (width, code page, cut).
-- Nothing is printed when the paper is out: the ticket is not kept for
-  later.
+- When the printer reports its paper status, nothing is sent while the
+  paper is out or the cover open. A printer that does not report it (or with
+  the status option off) keeps the ticket and prints it once reloaded.
 - The printers are not discovered automatically: ESC/POS printers do not
   announce themselves on the network.
 
@@ -112,4 +113,6 @@ Characters a table lacks are written as close as possible (’ → ', œ → oe,
   at a time: close the other applications that use it.
 - **Wrong accents**: change the code page, then print a test ticket.
 - **Lines cut or too short**: change the paper width.
+- **The QR code prints as text, or the paper is not cut**: some very cheap
+  clones lack these commands; turn the cut off, leave the QR code empty.
 - Logs: in the integration page; set `LOG_LEVEL=debug` for every check.

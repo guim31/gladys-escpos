@@ -109,3 +109,26 @@ test('the queue runs the operations of one printer one after the other', async (
   await Promise.all([first, second, other, failing.catch(() => {})]);
   assert.deepEqual(order, ['b1', 'a1', 'a2']);
 });
+
+test('a printer that accepts then closes: not printed, an error', async (t) => {
+  const net = await import('node:net');
+  const sockets = new Set();
+  const server = net.createServer((socket) => {
+    sockets.add(socket);
+    socket.end();
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => {
+    sockets.forEach((socket) => socket.destroy());
+    server.close();
+  });
+  // With the status query only: without it, the job is already in the kernel
+  // when the close arrives, and TCP cannot tell it was never read.
+  await assert.rejects(
+    exchange(
+      { host: '127.0.0.1', port: server.address().port },
+      { query: true, payload: Buffer.from('x'), timeouts },
+    ),
+    { kind: 'error' },
+  );
+});

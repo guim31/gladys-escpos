@@ -56,6 +56,7 @@ export const FAILURE_EVENT_INTERVAL_MS = 15 * 60 * 1000;
 export const HEARTBEAT_MS = 6 * 60 * 60 * 1000;
 // What a scene variable may push into one ticket: a long text is cut there.
 export const MAX_MESSAGE_CHARS = 4000;
+export const MAX_TITLE_CHARS = 200;
 
 const LOCALES = { en: 'en-GB', fr: 'fr-FR', de: 'de-DE', es: 'es-ES' };
 
@@ -295,7 +296,7 @@ export function registerIntegration(gladys, deps = {}) {
       throw new ActionFailure(ERROR_TEXT.qr_too_long);
     }
     return {
-      title: String(fields?.title ?? ''),
+      title: [...String(fields?.title ?? '')].slice(0, MAX_TITLE_CHARS).join(''),
       titleStyle: fields?.title_style,
       date: fields?.print_date === true ? formatDate(now(), config.language) : undefined,
       message,
@@ -406,7 +407,7 @@ export function registerIntegration(gladys, deps = {}) {
     } else if (actionKey === WIDGET_ACTION.PRINT) {
       ticket = ticketOf({ ...context?.values, title_style: 'tall', print_date: true });
     } else {
-      throw new Error(`Unknown widget action: ${actionKey}`);
+      throw new ActionFailure(ERROR_TEXT.error);
     }
     try {
       await printOn(device, target, ticket);

@@ -105,7 +105,9 @@ Los caracteres que faltan en una tabla se escriben de la forma más parecida
 - Solo texto: ni imágenes ni logotipos.
 - Una única configuración para todas las impresoras (ancho, página de
   códigos, corte).
-- Sin papel no se imprime nada: el ticket no se guarda para más tarde.
+- Cuando la impresora indica el estado del papel, no se envía nada mientras
+  falte papel o la tapa esté abierta. Una impresora que no lo indica (o con
+  la opción de estado desactivada) guarda el ticket y lo imprime al recargarla.
 - Las impresoras no se descubren automáticamente: las impresoras ESC/POS no
   se anuncian en la red.
 
@@ -119,5 +121,8 @@ Los caracteres que faltan en una tabla se escriben de la forma más parecida
 - **Acentos incorrectos**: cambie la página de códigos e imprima un ticket de
   prueba.
 - **Líneas cortadas o demasiado cortas**: cambie el ancho del papel.
+- **El código QR se imprime como texto, o el papel no se corta**: algunos
+  clones muy baratos no tienen estos comandos; desactive el corte y deje el
+  código QR vacío.
 - Registros: en la página de la integración; `LOG_LEVEL=debug` muestra cada
   comprobación.

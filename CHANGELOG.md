@@ -18,7 +18,7 @@ the notes of the version's GitHub Release.
   of tickets printed, checked once a minute.
 - **Print a ticket** scene action: a text with scene variables (`\n` for a
   new line), an optional title in three styles, the date, a QR code, then the
-  cut. Nothing is sent when the paper is out or the cover open.
+  cut. Nothing is sent when the printer reports no paper or an open cover.
 - **Ticket not printed** scene trigger, at most once per printer every 15
   minutes.
 - **Ticket printer** dashboard widget: tickets of the day, status, buttons

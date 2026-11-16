@@ -57,7 +57,9 @@ test/                             node --test, SDK fake Gladys + fake printers o
 - One TCP connection per operation, closed right after, and one operation per
   printer at a time (`PrinterQueue`): many printers serve a single client.
   The job is sent with `end()` and the socket closed when the printer closes
-  or 500 ms after the flush, never destroyed with bytes in flight.
+  or 500 ms after the flush, never destroyed with bytes in flight. A printer
+  that accepts then closes (busy with another client) is caught during the
+  status wait; with the status query off, TCP cannot tell the job was unread.
 - Status: `DLE EOT 2` (offline cause: cover, paper end stop, error) and
   `DLE EOT 4` (paper sensors), one byte each, recognized by the fixed bits
   (`byte & 0x93 === 0x12`). No answer within 1.5 s = "paper not reported",

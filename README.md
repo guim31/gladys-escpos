@@ -45,7 +45,8 @@ Add the printers in the **Discover** tab and print a test ticket.
 
 - Text and QR codes only: no images or logos.
 - One configuration for every printer.
-- A ticket is not kept when the paper is out: the action fails instead.
+- When the printer reports its paper status, a ticket is refused while the
+  paper is out; otherwise the printer keeps it until reloaded.
 - No automatic discovery: ESC/POS printers do not announce themselves.
 
 ## Development

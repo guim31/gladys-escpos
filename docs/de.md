@@ -105,8 +105,10 @@ gedruckt.
 
 - Nur Text: keine Bilder oder Logos.
 - Eine Konfiguration für alle Drucker (Breite, Codepage, Schnitt).
-- Ohne Papier wird nichts gedruckt: Der Beleg wird nicht für später
-  aufbewahrt.
+- Meldet der Drucker seinen Papierstatus, wird nichts gesendet, solange das
+  Papier fehlt oder der Deckel offen ist. Ein Drucker, der ihn nicht meldet
+  (oder mit ausgeschalteter Statusoption), behält den Beleg und druckt ihn
+  nach dem Nachfüllen.
 - Die Drucker werden nicht automatisch erkannt: ESC/POS-Drucker melden sich
   nicht im Netzwerk an.
 
@@ -120,5 +122,8 @@ gedruckt.
   nutzen.
 - **Falsche Umlaute**: Ändere die Codepage und drucke einen Testbeleg.
 - **Zeilen abgeschnitten oder zu kurz**: Ändere die Papierbreite.
+- **Der QR-Code wird als Text gedruckt oder das Papier nicht geschnitten**:
+  Manchen sehr billigen Nachbauten fehlen diese Befehle; schalte den Schnitt
+  aus, lass den QR-Code leer.
 - Protokolle: auf der Seite der Integration; `LOG_LEVEL=debug` zeigt jede
   Prüfung.

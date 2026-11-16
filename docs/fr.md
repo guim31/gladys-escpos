@@ -106,8 +106,10 @@ oe, € → EUR) ; les émojis et les autres alphabets s'impriment en `?`.
 - Texte seulement : pas d'images ni de logos.
 - Une seule configuration pour toutes les imprimantes (largeur, page de
   codes, coupe).
-- Rien n'est imprimé quand le papier manque : le ticket n'est pas gardé pour
-  plus tard.
+- Quand l'imprimante signale l'état du papier, rien n'est envoyé tant que le
+  papier manque ou que le capot est ouvert. Une imprimante qui ne le signale
+  pas (ou avec l'option d'état désactivée) garde le ticket et l'imprime une
+  fois rechargée.
 - Les imprimantes ne sont pas découvertes automatiquement : les imprimantes
   ESC/POS ne s'annoncent pas sur le réseau.
 
@@ -122,5 +124,8 @@ oe, € → EUR) ; les émojis et les autres alphabets s'impriment en `?`.
 - **Mauvais accents** : changez la page de codes, puis imprimez un ticket de
   test.
 - **Lignes coupées ou trop courtes** : changez la largeur du papier.
+- **Le QR code s'imprime en texte, ou le papier n'est pas coupé** : certains
+  clones très bon marché n'ont pas ces commandes ; désactivez la coupe,
+  laissez le QR code vide.
 - Journaux : dans la page de l'intégration ; `LOG_LEVEL=debug` montre chaque
   vérification.

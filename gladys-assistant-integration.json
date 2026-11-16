@@ -274,7 +274,7 @@
         "de": "Auf jedem eingerichteten Drucker: Titel, Datum, Sonderzeichen der vier Sprachen und ein QR-Code.",
         "es": "En cada impresora configurada: título, fecha, acentos de los cuatro idiomas y un código QR."
       },
-      "timeout_seconds": 60
+      "timeout_seconds": 120
     }
   ],
   "scene_triggers": [
@@ -412,7 +412,7 @@
         "de": "Ein Text mit Szenenvariablen, optional Titel, Datum und QR-Code, dann der Schnitt. \\n beginnt eine neue Zeile.",
         "es": "Un texto con variables de escena, opcionalmente título, fecha y código QR, y luego el corte. \\n inicia una nueva línea."
       },
-      "timeout_seconds": 30,
+      "timeout_seconds": 45,
       "fields": [
         {
           "key": "printer",
@@ -557,7 +557,7 @@
         "es": "Estado de las impresoras, tickets del día y botones para imprimir una nota o un ticket de prueba."
       },
       "icon": "printer",
-      "action_timeout_seconds": 30,
+      "action_timeout_seconds": 45,
       "settings": [
         {
           "key": "printer",
@@ -571,10 +571,10 @@
           },
           "required": false,
           "description": {
-            "en": "Empty: every printer, without buttons.",
-            "fr": "Vide : toutes les imprimantes, sans boutons.",
-            "de": "Leer: alle Drucker, ohne Knöpfe.",
-            "es": "Vacío: todas las impresoras, sin botones."
+            "en": "Empty: every printer; the buttons show when there is only one.",
+            "fr": "Vide : toutes les imprimantes ; les boutons s'affichent s'il n'y en a qu'une.",
+            "de": "Leer: alle Drucker; die Knöpfe erscheinen, wenn es nur einen gibt.",
+            "es": "Vacío: todas las impresoras; los botones aparecen si solo hay una."
           }
         },
         {

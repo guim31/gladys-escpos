@@ -16,7 +16,7 @@ import net from 'node:net';
 
 export const CONNECT_TIMEOUT_MS = 5000;
 export const STATUS_TIMEOUT_MS = 1500;
-export const SEND_TIMEOUT_MS = 15_000;
+export const SEND_TIMEOUT_MS = 10_000;
 export const CLOSE_GRACE_MS = 500;
 
 export const STATUS_QUERY = Buffer.from([0x10, 0x04, 0x02, 0x10, 0x04, 0x04]);
@@ -69,8 +69,6 @@ const UNREACHABLE_CODES = new Set([
   'ENETUNREACH',
   'ENOTFOUND',
   'EAI_AGAIN',
-  'ECONNRESET',
-  'EPIPE',
 ]);
 
 function toPrinterError(err) {
@@ -79,6 +77,10 @@ function toPrinterError(err) {
   }
   if (UNREACHABLE_CODES.has(err?.code)) {
     return new PrinterError('unreachable', `${err.code}`);
+  }
+  if (err?.code === 'ECONNRESET' || err?.code === 'EPIPE') {
+    // Reachable, but it cut the connection: busy with another client, or reset.
+    return new PrinterError('error', `Connection cut by the printer (${err.code})`);
   }
   return new PrinterError('error', err?.message ?? String(err));
 }
@@ -131,6 +133,14 @@ export function exchange(target, options = {}) {
     };
 
     socket.on('error', (err) => finish(err));
+    // Closed by the printer before the job was handed over (a single-client
+    // printer busy with someone else accepts, then closes): not printed.
+    let sending = false;
+    socket.once('close', () => {
+      if (!sending) {
+        finish(new PrinterError('error', 'Connection closed by the printer'));
+      }
+    });
     socket.on('data', (chunk) => {
       received.push(...chunk);
       if (waitingStatus && received.length >= 2) {
@@ -143,6 +153,11 @@ export function exchange(target, options = {}) {
         finish();
         return;
       }
+      if (socket.destroyed || !socket.writable) {
+        finish(new PrinterError('error', 'Connection closed by the printer'));
+        return;
+      }
+      sending = true;
       arm(sendTimeout, 'timeout', 'The printer did not take the ticket in time');
       // end() flushes the job then half-closes. Done when the printer closes
       // too, or shortly after the flush for those that keep the connection

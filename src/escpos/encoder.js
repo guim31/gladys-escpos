@@ -70,7 +70,8 @@ const SPACES = /[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g;
 // Line separators kept as line breaks; every other control character goes.
 const LINE_BREAKS = /\r\n|\r|\u2028|\u2029|\u0085/g;
 // eslint-disable-next-line no-control-regex
-const CONTROLS = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200d\u2060\ufeff]/g;
+const CONTROLS =
+  /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200d\u2060\ufeff\u00ad\ufe00-\ufe0f]/g;
 
 /** Unicode -> byte map of one code page. */
 const maps = new Map();
@@ -97,6 +98,7 @@ function byteMap(codePage) {
  */
 export function cleanText(text) {
   return String(text ?? '')
+    .normalize('NFC')
     .replace(/\\n/g, '\n')
     .replace(LINE_BREAKS, '\n')
     .replace(/\t/g, ' ')
@@ -154,6 +156,14 @@ export function encodeLine(line, codePage) {
  * @param {number} columns
  * @returns {number[][]}
  */
+const trimSpaces = (bytes) => {
+  let end = bytes.length;
+  while (end > 0 && bytes[end - 1] === 0x20) {
+    end -= 1;
+  }
+  return bytes.slice(0, end);
+};
+
 export function wrapBytes(bytes, columns) {
   const lines = [];
   let rest = bytes;
@@ -164,8 +174,11 @@ export function wrapBytes(bytes, columns) {
       lines.push(rest.slice(0, cut));
       rest = rest.slice(cut);
     } else {
-      lines.push(rest.slice(0, cut));
+      lines.push(trimSpaces(rest.slice(0, cut)));
       rest = rest.slice(cut + 1);
+      while (rest[0] === 0x20) {
+        rest = rest.slice(1);
+      }
     }
   }
   lines.push(rest);
@@ -262,7 +275,9 @@ export function buildTicket(ticket, { columns, codePage, cut }) {
   unknown += body.unknown;
   pushLines(body.lines);
 
-  const qr = String(ticket.qr ?? '').trim();
+  // Real-time commands (DLE DC4: open the drawer, power off) run even inside
+  // the data of another command: the QR content loses its controls too.
+  const qr = cleanText(ticket.qr).replace(/\n/g, ' ').trim();
   if (qr !== '') {
     out.push(0x0a, ...COMMANDS.ALIGN_CENTER, ...qrCommands(qr, columns >= 42 ? 6 : 4));
     out.push(...COMMANDS.ALIGN_LEFT);

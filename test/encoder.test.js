@@ -154,3 +154,23 @@ test('the recorded tickets are produced byte for byte', async () => {
   );
   assert.deepEqual(tall.bytes, await fixture('ready-02.bin'));
 });
+
+test('decomposed accents, soft hyphens and emoji variation selectors', () => {
+  // "Cafe" + combining acute accent, as macOS and some APIs send it.
+  assert.equal(cleanText('Cafe\u0301 ok'), 'Caf\u00e9 ok');
+  assert.equal(cleanText('ab\u00adcd'), 'abcd');
+  assert.equal(encodeLine(cleanText('\u2764\ufe0f'), 'cp858').unknown, 1);
+});
+
+test('the QR code content loses its control characters (no DLE DC4 to the printer)', () => {
+  const { bytes } = buildTicket({ message: 'x', qr: 'a\u0010\u0014\u0001\u0000\u0005b' }, options);
+  assert.ok(!bytes.includes(Buffer.from([0x10, 0x14])));
+  assert.ok(bytes.includes(Buffer.from('ab')));
+});
+
+test('wrapped lines neither end nor start with spaces', () => {
+  const lines = wrapBytes([...Buffer.from('aaa  bbb')], 4).map((line) =>
+    Buffer.from(line).toString(),
+  );
+  assert.deepEqual(lines, ['aaa', 'bbb']);
+});
