@@ -69,9 +69,11 @@ const REPLACEMENTS = {
 const SPACES = /[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g;
 // Line separators kept as line breaks; every other control character goes.
 const LINE_BREAKS = /\r\n|\r|\u2028|\u2029|\u0085/g;
-// eslint-disable-next-line no-control-regex
+// Controls, zero-width characters, soft hyphen and emoji variation selectors.
+/* eslint-disable no-control-regex, no-misleading-character-class */
 const CONTROLS =
   /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200d\u2060\ufeff\u00ad\ufe00-\ufe0f]/g;
+/* eslint-enable no-control-regex, no-misleading-character-class */
 
 /** Unicode -> byte map of one code page. */
 const maps = new Map();
