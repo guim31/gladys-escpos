@@ -31,18 +31,48 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+index.js                          SDK wiring only: registerIntegration(gladys), connect()
+src/app.js                        every handler: discovery, sampling loop, scene action,
+                                  test action, widget, print_failed trigger
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest) + printer list parsing
+src/device.js                     one device per printer: features, states, status key
+src/escpos/encoder.js             text -> ESC/POS bytes (code page, wrap, title, QR, cut)
+src/escpos/codepages.js           PC437/850/858/WPC1252 tables + ESC t numbers
+src/escpos/printer.js             TCP 9100: DLE EOT status, job, per-printer queue
+src/store.js                      ticket counters in /data/tickets.json
+src/widgets.js                    widget `ticket_printer`
+src/texts.js                      every text in en/fr/de/es, ActionFailure
+gladys-assistant-integration.json manifest
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys
+test/                             node --test, SDK fake Gladys + fake printers on the loopback
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
+
+## The ESC/POS integration
+
+- No discovery: ESC/POS printers do not announce themselves. The devices
+  come from the `printers` list; the platform id is `host-port` (the printer
+  reports no serial over port 9100), so changing a printer's address creates
+  a new device.
+- One TCP connection per operation, closed right after, and one operation per
+  printer at a time (`PrinterQueue`): many printers serve a single client.
+  The job is sent with `end()` and the socket closed when the printer closes
+  or 500 ms after the flush, never destroyed with bytes in flight.
+- Status: `DLE EOT 2` (offline cause: cover, paper end stop, error) and
+  `DLE EOT 4` (paper sensors), one byte each, recognized by the fixed bits
+  (`byte & 0x93 === 0x12`). No answer within 1.5 s = "paper not reported",
+  not an error. Before a job, paper out or cover open cancels it: the printer
+  would hold the job and print it hours later.
+- The text is reduced to the code page bytes: control characters dropped (a
+  scene variable cannot inject commands), missing characters spelled
+  (`REPLACEMENTS`, then the base letter, then `?`). Scene fields are single
+  line: the two characters `\n` mean a new line.
+- Code page numbers of `ESC t` are Epson's (PC437 0, PC850 2, WPC1252 16,
+  PC858 19); most clones share them. Star in Star mode uses other commands:
+  only the ESC/POS emulation is supported.
+- Writing the code: the file-writing tool turned `\u2028`-style escapes into
+  the characters themselves (U+2028 breaks a JS regex literal): write such
+  escapes through a script.
 
 ## Rules
 

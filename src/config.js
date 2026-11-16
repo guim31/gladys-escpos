@@ -1,45 +1,83 @@
 // -----------------------------------------------------------------------------
-// Integration configuration.
-//
-// The configuration is filled in by the user in Gladys, from the `config_schema`
-// declared in `gladys-assistant-integration.json`. The SDK fetches it for you
-// (`gladys.getConfig()`) and notifies you of every change through
-// `gladys.onConfigUpdated()`.
-//
-// This module only provides defaults and normalizes the received object, so the
-// rest of the code never has to deal with `undefined`.
+// Integration configuration: defaults (mirroring the manifest `config_schema`)
+// and normalization, so the rest of the code never deals with `undefined`.
 // -----------------------------------------------------------------------------
 
-// Defaults: they MUST stay consistent with the `default` values declared in the
-// `config_schema` of the manifest.
-export const DEFAULT_CONFIG = {
-  latitude: 48.8566, // Paris
-  longitude: 2.3522,
-  unit: 'celsius', // 'celsius' | 'fahrenheit'
-  // Seconds between two reads of the polled sensors. Gladys polls at most once
-  // a minute: slower intervals are applied by skipping polls (see
-  // createPoller in src/devices/index.js).
-  poll_frequency: 300,
-  // Reserved key (NOT in config_schema): because the manifest declares both
-  // 'local' and 'cloud' in its `transports` field, Gladys shows a standard
-  // "Prefer the local connection" toggle and sends the user's choice here.
-  // Read-only for the integration; defaults to true.
-  GLADYS_PREFER_LOCAL: true,
+import { CODE_PAGE_KEYS } from './escpos/codepages.js';
+
+export const LANGUAGES = ['en', 'fr', 'de', 'es'];
+
+// Characters per line in the normal font (font A, 12 × 24 dots).
+export const PAPER_WIDTHS = {
+  58: 32,
+  80: 48,
+  '80_42': 42,
 };
 
+export const DEFAULT_PORT = 9100;
+
+export const DEFAULT_CONFIG = {
+  printers: '',
+  paper_width: '80',
+  code_page: 'cp858',
+  cut: true,
+  status_query: true,
+  language: 'fr',
+};
+
+const bool = (value, fallback) => (typeof value === 'boolean' ? value : fallback);
+
 /**
- * Merge the user config with the defaults.
- * @param {Record<string, unknown>} raw config returned by the SDK
+ * @param {Record<string, unknown>} [raw] config returned by the SDK
  */
 export function normalizeConfig(raw = {}) {
+  const config = raw ?? {};
   return {
-    ...DEFAULT_CONFIG,
-    ...raw,
-    // Force the types: config may arrive as strings from a form.
-    latitude: Number(raw.latitude ?? DEFAULT_CONFIG.latitude),
-    longitude: Number(raw.longitude ?? DEFAULT_CONFIG.longitude),
-    poll_frequency: Number(raw.poll_frequency ?? DEFAULT_CONFIG.poll_frequency),
-    // The preference is a boolean; anything but an explicit false means true.
-    GLADYS_PREFER_LOCAL: raw.GLADYS_PREFER_LOCAL !== false,
+    printers: typeof config.printers === 'string' ? config.printers : DEFAULT_CONFIG.printers,
+    paper_width: Object.hasOwn(PAPER_WIDTHS, String(config.paper_width))
+      ? String(config.paper_width)
+      : DEFAULT_CONFIG.paper_width,
+    code_page: CODE_PAGE_KEYS.includes(config.code_page)
+      ? config.code_page
+      : DEFAULT_CONFIG.code_page,
+    cut: bool(config.cut, DEFAULT_CONFIG.cut),
+    status_query: bool(config.status_query, DEFAULT_CONFIG.status_query),
+    language: LANGUAGES.includes(config.language) ? config.language : DEFAULT_CONFIG.language,
   };
+}
+
+/** Characters per line of the configured paper. */
+export const columnsOf = (config) => PAPER_WIDTHS[config.paper_width];
+
+/**
+ * Parse the printer list: addresses separated by commas, semicolons, spaces or
+ * line breaks, each `host` or `host:port` (IPv6 between brackets).
+ * @param {string} list
+ * @returns {{ targets: { host: string, port: number }[], invalid: string[] }}
+ */
+export function parsePrinters(list) {
+  const targets = [];
+  const invalid = [];
+  const seen = new Set();
+  for (const entry of String(list ?? '').split(/[\s,;]+/)) {
+    const raw = entry.trim().replace(/^(tcp|socket|raw):\/\//i, '');
+    if (raw === '') {
+      continue;
+    }
+    const match =
+      raw.match(/^\[([0-9a-f:.]+)\](?::(\d+))?$/i) ??
+      raw.match(/^([a-z0-9][a-z0-9.-]*)(?::(\d+))?$/i);
+    const port = match?.[2] === undefined ? DEFAULT_PORT : Number(match[2]);
+    if (!match || !Number.isInteger(port) || port < 1 || port > 65535) {
+      invalid.push(raw);
+      continue;
+    }
+    const host = match[1].toLowerCase();
+    const key = `${host}:${port}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      targets.push({ host, port });
+    }
+  }
+  return { targets, invalid };
 }
