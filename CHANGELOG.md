@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-19
+
 ### Added
 
 - Network ESC/POS ticket printers (raw TCP port 9100): Epson TM, Xprinter,
@@ -27,3 +29,6 @@ the notes of the version's GitHub Release.
 - Code pages PC858, PC850, WPC1252, PC437 or plain ASCII for the accents;
   58 mm and 80 mm paper; cutter or not.
 - Texts in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-escpos/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-escpos/releases/tag/v1.0.0
