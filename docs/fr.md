@@ -1,67 +1,131 @@
-# Template de démonstration
+# Imprimantes de tickets ESC/POS
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Imprimez depuis vos scènes sur une imprimante thermique de tickets du réseau :
+le résumé du jour, une liste de courses, un mot pour la famille. Tout reste
+sur votre réseau local.
+
+> Développée sans le matériel : vos retours sont les bienvenus. L'intégration
+> a été testée contre une imprimante simulée, pas une vraie.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- Une action de scène **Imprimer un ticket** : un texte avec variables de
+  scène, en option un titre (grand, double hauteur ou gras), la date et
+  l'heure, un QR code, puis la coupe du papier.
+- Un appareil par imprimante : **Joignable**, **Papier bientôt fini**,
+  **Plus de papier**, un texte **État** (prête, papier, capot ouvert, erreur,
+  injoignable) et le nombre de **Tickets imprimés** par Gladys. L'imprimante
+  est vérifiée une fois par minute.
+- Un déclencheur de scène **Ticket non imprimé**, pour être prévenu quand une
+  scène n'a pas pu imprimer.
+- Un widget de tableau de bord **Imprimante de tickets**, avec un bouton pour
+  imprimer un mot tapé sur le tableau de bord.
+
+## Avant de commencer
+
+- Une imprimante thermique de tickets qui parle **ESC/POS** sur le réseau
+  (port TCP brut **9100**) : Epson TM-T20/T88, Xprinter, Munbyn, Rongta,
+  HOIN… Les Star fonctionnent dans leur mode d'émulation ESC/POS. Les
+  imprimantes seulement USB ou Bluetooth ne sont pas prises en charge.
+- Une **adresse IP fixe** pour l'imprimante (réservation DHCP dans votre box).
+  La plupart impriment leur adresse si l'on garde le bouton d'avance papier
+  enfoncé à l'allumage.
+- Gladys 5.2 ou plus récent.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+1. Dans **Intégrations → Imprimantes de tickets ESC/POS → Configuration**,
+   saisissez les **adresses des imprimantes**, séparées par des virgules :
+   `192.168.1.50`, ou `192.168.1.51:9101` pour un autre port.
+2. Choisissez la **largeur du papier** : 58 mm imprime 32 caractères par
+   ligne, 80 mm en imprime 48 (ou 42 sur certains modèles : choisissez-le si
+   les lignes du ticket de test sont coupées).
+3. Laissez **Couper le papier après chaque ticket** activé si l'imprimante a
+   un massicot.
+4. Enregistrez, ouvrez l'onglet **Découverte** et ajoutez les imprimantes.
+5. Cliquez sur **Imprimer un ticket de test** : chaque imprimante configurée
+   imprime un titre, la date, les accents des quatre langues et un QR code.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+**Demander l'état du papier à l'imprimante** utilise les commandes de statut
+en temps réel (DLE EOT). La plupart des imprimantes répondent ; quand l'une
+ne répond pas, l'état indique « papier non signalé » et les fonctionnalités
+papier restent vides. Ne le désactivez que si une imprimante sort des
+caractères parasites.
 
-## Actions
-
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+La **langue des textes de l'intégration** fixe les noms des appareils, la
+date et le ticket de test, et les messages d'erreur.
 
 ## Scènes
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+**Imprimer un ticket** (action) : choisissez l'imprimante et écrivez le
+texte. Le champ n'a qu'une ligne : écrivez `\n` là où une nouvelle ligne doit
+commencer, par exemple `Lait\nPain\n{{triggerEvent.data.name}}`. En option :
+un titre et son style, la date et l'heure, un QR code (un lien ou un texte,
+500 octets au plus). L'action renvoie le nombre de tickets imprimés sur cette
+imprimante.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Si l'imprimante est injoignable, n'a plus de papier ou a le capot ouvert,
+rien n'est imprimé, l'action échoue (en rouge dans le journal de la scène) et
+le déclencheur **Ticket non imprimé** se lance, au plus une fois par
+imprimante toutes les 15 minutes. Ses variables donnent le nom de
+l'imprimante, la raison et le message d'erreur : une scène peut alors vous
+prévenir par un autre canal.
+
+Les fonctionnalités de l'imprimante servent aussi de déclencheurs et de
+conditions habituels : par exemple « Plus de papier passe à 1 » → envoyer un
+message.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le widget **Imprimante de tickets** affiche les tickets imprimés aujourd'hui
+et au total, et l'état des imprimantes. Avec une imprimante choisie dans ses
+réglages, il propose aussi deux boutons, chacun masquable :
+
+- **Imprimer un mot** : un formulaire s'ouvre sur le tableau de bord, tapez
+  un titre et un texte, le ticket est imprimé avec la date.
+- **Ticket de test**.
+
+## Accents et pages de codes
+
+Une imprimante de tickets n'a pas de polices pour chaque langue : elle
+imprime avec une table de caractères (page de codes). L'intégration convertit
+le texte vers la table choisie :
+
+- **PC858** (par défaut) convient à Epson et à la plupart des clones :
+  accents français, allemands, espagnols et le symbole euro.
+- Si le ticket de test imprime de mauvaises lettres, essayez **PC850**, puis
+  **WPC1252**.
+- **Sans accents** imprime des lettres simples (é → e) : cela marche sur
+  toutes les imprimantes.
+
+Les caractères absents d'une table sont écrits au plus proche (’ → ', œ →
+oe, € → EUR) ; les émojis et les autres alphabets s'impriment en `?`.
+
+## Limites
+
+- Texte seulement : pas d'images ni de logos.
+- Une seule configuration pour toutes les imprimantes (largeur, page de
+  codes, coupe).
+- Quand l'imprimante signale l'état du papier, rien n'est envoyé tant que le
+  papier manque ou que le capot est ouvert. Une imprimante qui ne le signale
+  pas (ou avec l'option d'état désactivée) garde le ticket et l'imprime une
+  fois rechargée.
+- Les imprimantes ne sont pas découvertes automatiquement : les imprimantes
+  ESC/POS ne s'annoncent pas sur le réseau.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **L'imprimante reste « Injoignable »** : vérifiez son adresse (page de test
+  de l'imprimante), qu'elle est sur le même réseau et que le port 9100 est
+  ouvert (`nc -vz 192.168.1.50 9100` depuis un autre ordinateur).
+- **Rien ne s'imprime, sans erreur** : certaines imprimantes n'acceptent
+  qu'une connexion à la fois : fermez les autres applications qui
+  l'utilisent.
+- **Mauvais accents** : changez la page de codes, puis imprimez un ticket de
+  test.
+- **Lignes coupées ou trop courtes** : changez la largeur du papier.
+- **Le QR code s'imprime en texte, ou le papier n'est pas coupé** : certains
+  clones très bon marché n'ont pas ces commandes ; désactivez la coupe,
+  laissez le QR code vide.
+- Journaux : dans la page de l'intégration ; `LOG_LEVEL=debug` montre chaque
+  vérification.

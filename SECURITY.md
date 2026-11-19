@@ -30,6 +30,13 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration stores no secret. It keeps the ticket counters in
+`/data/tickets.json` (printer identifiers and numbers only). It only opens
+TCP connections to the printer addresses the user configured, on the local
+network, and sends nothing else anywhere. The text of a ticket comes from
+Gladys scenes and the dashboard: every control character is removed before
+it reaches the printer, so a scene variable cannot send printer commands.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the printers the integration talks to.

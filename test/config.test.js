@@ -1,33 +1,42 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import { normalizeConfig, parsePrinters } from '../src/config.js';
 
-test('normalizeConfig returns the defaults when called with no argument', () => {
-  assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
+test('the printer list: separators, ports, IPv6, schemes, duplicates, invalid entries', () => {
+  assert.deepEqual(
+    parsePrinters(
+      ' 192.0.2.10,192.0.2.10:9100 ;Printer.LOCAL:9101\n[2001:db8::1] tcp://192.0.2.12 ',
+    ),
+    {
+      targets: [
+        { host: '192.0.2.10', port: 9100 },
+        { host: 'printer.local', port: 9101 },
+        { host: '2001:db8::1', port: 9100 },
+        { host: '192.0.2.12', port: 9100 },
+      ],
+      invalid: [],
+    },
+  );
+  assert.deepEqual(parsePrinters('x:0, y:70000, http://a/b, -bad').invalid, [
+    'x:0',
+    'y:70000',
+    'http://a/b',
+    '-bad',
+  ]);
+  assert.deepEqual(parsePrinters(undefined), { targets: [], invalid: [] });
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
-});
-
-test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
-});
-
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
-});
-
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('normalization falls back to the defaults on unknown values', () => {
+  assert.deepEqual(
+    normalizeConfig({ paper_width: 58, code_page: 'koi8', cut: 'yes', language: 'it' }),
+    {
+      printers: '',
+      paper_width: '58',
+      code_page: 'cp858',
+      cut: true,
+      status_query: true,
+      language: 'fr',
+    },
+  );
+  assert.equal(normalizeConfig(null).paper_width, '80');
 });

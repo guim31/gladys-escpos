@@ -1,177 +1,605 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "ESC/POS ticket printers",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Print notes, lists and daily summaries from your scenes on a network ESC/POS ticket printer.",
+    "fr": "Imprimez mots, listes et résumés depuis vos scènes sur une imprimante de tickets ESC/POS réseau.",
+    "de": "Drucke Notizen, Listen und Tagesübersichten aus deinen Szenen auf einem ESC/POS-Netzwerk-Bondrucker.",
+    "es": "Imprima notas, listas y resúmenes desde sus escenas en una impresora de tickets ESC/POS en red."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-escpos:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-escpos/main/cover.png",
+  "categories": ["appliances", "notifications"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
-      "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+      "label": {
+        "en": "Your ticket printers",
+        "fr": "Vos imprimantes de tickets",
+        "de": "Deine Bondrucker",
+        "es": "Sus impresoras de tickets"
       },
-      "links": [
+      "description": {
+        "en": "Thermal receipt printers on the network that speak ESC/POS on the raw TCP port 9100: Epson TM, Xprinter, Munbyn, Rongta, HOIN, and Star printers in ESC/POS mode. Give each printer a fixed IP address in your router, enter it below, then add the printers in the Discover tab and print a test ticket.",
+        "fr": "Les imprimantes thermiques de tickets en réseau qui parlent ESC/POS sur le port TCP brut 9100 : Epson TM, Xprinter, Munbyn, Rongta, HOIN, et Star en mode ESC/POS. Donnez à chaque imprimante une adresse IP fixe dans votre box, saisissez-la ci-dessous, puis ajoutez les imprimantes dans l'onglet Découverte et imprimez un ticket de test.",
+        "de": "Thermobondrucker im Netzwerk, die ESC/POS über den rohen TCP-Port 9100 sprechen: Epson TM, Xprinter, Munbyn, Rongta, HOIN und Star im ESC/POS-Modus. Gib jedem Drucker in deinem Router eine feste IP-Adresse, trage sie unten ein, füge die Drucker dann im Reiter Erkennung hinzu und drucke einen Testbeleg.",
+        "es": "Las impresoras térmicas de tickets en red que hablan ESC/POS por el puerto TCP directo 9100: Epson TM, Xprinter, Munbyn, Rongta, HOIN y Star en modo ESC/POS. Asigne a cada impresora una dirección IP fija en su router, indíquela a continuación, añada las impresoras en la pestaña Descubrimiento e imprima un ticket de prueba."
+      }
+    },
+    {
+      "key": "printers",
+      "type": "string",
+      "label": {
+        "en": "Printer addresses",
+        "fr": "Adresses des imprimantes",
+        "de": "Druckeradressen",
+        "es": "Direcciones de las impresoras"
+      },
+      "description": {
+        "en": "One or more addresses separated by commas, port 9100 unless stated (host:port).",
+        "fr": "Une ou plusieurs adresses séparées par des virgules, port 9100 sauf mention (hôte:port).",
+        "de": "Eine oder mehrere Adressen, durch Kommas getrennt, Port 9100, wenn nicht angegeben (Host:Port).",
+        "es": "Una o varias direcciones separadas por comas, puerto 9100 salvo indicación (host:puerto)."
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.50, 192.168.1.51:9100",
+        "fr": "ex. 192.168.1.50, 192.168.1.51:9100",
+        "de": "z. B. 192.168.1.50, 192.168.1.51:9100",
+        "es": "p. ej. 192.168.1.50, 192.168.1.51:9100"
+      },
+      "required": true
+    },
+    {
+      "key": "paper_width",
+      "type": "select",
+      "label": {
+        "en": "Paper width",
+        "fr": "Largeur du papier",
+        "de": "Papierbreite",
+        "es": "Ancho del papel"
+      },
+      "description": {
+        "en": "Sets the characters per line. Most 80 mm printers print 48; some print 42.",
+        "fr": "Fixe le nombre de caractères par ligne. La plupart des imprimantes 80 mm en impriment 48 ; certaines 42.",
+        "de": "Legt die Zeichen pro Zeile fest. Die meisten 80-mm-Drucker drucken 48, manche 42.",
+        "es": "Fija los caracteres por línea. La mayoría de las impresoras de 80 mm imprimen 48; algunas, 42."
+      },
+      "required": false,
+      "default": "80",
+      "options": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "value": "58",
+          "label": {
+            "en": "58 mm (32 characters)",
+            "fr": "58 mm (32 caractères)",
+            "de": "58 mm (32 Zeichen)",
+            "es": "58 mm (32 caracteres)"
+          }
+        },
+        {
+          "value": "80",
+          "label": {
+            "en": "80 mm (48 characters)",
+            "fr": "80 mm (48 caractères)",
+            "de": "80 mm (48 Zeichen)",
+            "es": "80 mm (48 caracteres)"
+          }
+        },
+        {
+          "value": "80_42",
+          "label": {
+            "en": "80 mm (42 characters)",
+            "fr": "80 mm (42 caractères)",
+            "de": "80 mm (42 Zeichen)",
+            "es": "80 mm (42 caracteres)"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "code_page",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": {
+        "en": "Code page (accents)",
+        "fr": "Page de codes (accents)",
+        "de": "Codepage (Umlaute, Akzente)",
+        "es": "Página de códigos (acentos)"
+      },
+      "description": {
+        "en": "The character table of the printer. PC858 suits most printers; if the test ticket shows wrong accents, try PC850, then WPC1252.",
+        "fr": "La table de caractères de l'imprimante. PC858 convient à la plupart ; si le ticket de test imprime mal les accents, essayez PC850, puis WPC1252.",
+        "de": "Die Zeichentabelle des Druckers. PC858 passt für die meisten; druckt der Testbeleg Umlaute falsch, versuche PC850, dann WPC1252.",
+        "es": "La tabla de caracteres de la impresora. PC858 sirve para la mayoría; si el ticket de prueba imprime mal los acentos, pruebe PC850 y luego WPC1252."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "cp858",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "cp858",
+          "label": {
+            "en": "PC858 (Western Europe, euro)",
+            "fr": "PC858 (Europe de l'Ouest, euro)",
+            "de": "PC858 (Westeuropa, Euro)",
+            "es": "PC858 (Europa occidental, euro)"
+          }
+        },
+        {
+          "value": "cp850",
+          "label": {
+            "en": "PC850 (Western Europe)",
+            "fr": "PC850 (Europe de l'Ouest)",
+            "de": "PC850 (Westeuropa)",
+            "es": "PC850 (Europa occidental)"
+          }
+        },
+        {
+          "value": "wpc1252",
+          "label": {
+            "en": "WPC1252 (Windows)",
+            "fr": "WPC1252 (Windows)",
+            "de": "WPC1252 (Windows)",
+            "es": "WPC1252 (Windows)"
+          }
+        },
+        {
+          "value": "cp437",
+          "label": {
+            "en": "PC437 (USA)",
+            "fr": "PC437 (États-Unis)",
+            "de": "PC437 (USA)",
+            "es": "PC437 (EE. UU.)"
+          }
+        },
+        {
+          "value": "ascii",
+          "label": {
+            "en": "No accents (safest)",
+            "fr": "Sans accents (le plus sûr)",
+            "de": "Ohne Akzente (am sichersten)",
+            "es": "Sin acentos (lo más seguro)"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "cut",
+      "type": "boolean",
+      "label": {
+        "en": "Cut the paper after each ticket",
+        "fr": "Couper le papier après chaque ticket",
+        "de": "Papier nach jedem Beleg schneiden",
+        "es": "Cortar el papel tras cada ticket"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Turn off for a printer without a cutter: the paper is then fed out to be torn off.",
+        "fr": "Désactivez pour une imprimante sans massicot : le papier sort alors pour être déchiré.",
+        "de": "Schalte es für einen Drucker ohne Abschneider aus: Das Papier wird dann zum Abreißen vorgeschoben.",
+        "es": "Desactívelo en una impresora sin cortador: el papel sale entonces para cortarlo a mano."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": true
+    },
+    {
+      "key": "status_query",
+      "type": "boolean",
+      "label": {
+        "en": "Ask the printer for its paper status",
+        "fr": "Demander l'état du papier à l'imprimante",
+        "de": "Drucker nach dem Papierstatus fragen",
+        "es": "Preguntar a la impresora el estado del papel"
+      },
+      "description": {
+        "en": "Real-time status (DLE EOT): paper, cover. Turn off if a printer prints stray characters.",
+        "fr": "Statut en temps réel (DLE EOT) : papier, capot. Désactivez si une imprimante sort des caractères parasites.",
+        "de": "Echtzeitstatus (DLE EOT): Papier, Deckel. Schalte es aus, wenn ein Drucker wirre Zeichen druckt.",
+        "es": "Estado en tiempo real (DLE EOT): papel, tapa. Desactívelo si una impresora imprime caracteres extraños."
+      },
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the integration texts",
+        "fr": "Langue des textes de l'intégration",
+        "de": "Sprache der Texte der Integration",
+        "es": "Idioma de los textos de la integración"
+      },
+      "description": {
+        "en": "For the device names, the date and test ticket, and the error messages.",
+        "fr": "Pour les noms des appareils, la date et le ticket de test, et les messages d'erreur.",
+        "de": "Für die Gerätenamen, das Datum und den Testbeleg sowie die Fehlermeldungen.",
+        "es": "Para los nombres de los dispositivos, la fecha y el ticket de prueba, y los mensajes de error."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_print",
+      "label": {
+        "en": "Print a test ticket",
+        "fr": "Imprimer un ticket de test",
+        "de": "Testbeleg drucken",
+        "es": "Imprimir un ticket de prueba"
+      },
+      "description": {
+        "en": "On every configured printer: title, date, accents of the four languages and a QR code.",
+        "fr": "Sur chaque imprimante configurée : titre, date, accents des quatre langues et un QR code.",
+        "de": "Auf jedem eingerichteten Drucker: Titel, Datum, Sonderzeichen der vier Sprachen und ein QR-Code.",
+        "es": "En cada impresora configurada: título, fecha, acentos de los cuatro idiomas y un código QR."
+      },
+      "timeout_seconds": 120
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "print_failed",
+      "label": {
+        "en": "Ticket not printed",
+        "fr": "Ticket non imprimé",
+        "de": "Beleg nicht gedruckt",
+        "es": "Ticket no impreso"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A scene could not print a ticket. At most once per printer every 15 minutes.",
+        "fr": "Une scène n'a pas pu imprimer un ticket. Au plus une fois par imprimante toutes les 15 minutes.",
+        "de": "Eine Szene konnte keinen Beleg drucken. Höchstens einmal pro Drucker alle 15 Minuten.",
+        "es": "Una escena no ha podido imprimir un ticket. Como máximo una vez por impresora cada 15 minutos."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "printer",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          },
+          "required": false
         },
         {
-          "key": "target",
+          "key": "reason",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Reason",
+            "fr": "Raison",
+            "de": "Grund",
+            "es": "Motivo"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "unreachable",
+              "label": {
+                "en": "Printer unreachable",
+                "fr": "Imprimante injoignable",
+                "de": "Drucker nicht erreichbar",
+                "es": "Impresora inaccesible"
+              }
+            },
+            {
+              "value": "paper_out",
+              "label": {
+                "en": "Out of paper",
+                "fr": "Plus de papier",
+                "de": "Papier leer",
+                "es": "Sin papel"
+              }
+            },
+            {
+              "value": "cover_open",
+              "label": {
+                "en": "Cover open",
+                "fr": "Capot ouvert",
+                "de": "Deckel offen",
+                "es": "Tapa abierta"
+              }
+            },
+            {
+              "value": "timeout",
+              "label": {
+                "en": "Ticket not taken in time",
+                "fr": "Ticket non pris à temps",
+                "de": "Beleg nicht rechtzeitig angenommen",
+                "es": "Ticket no aceptado a tiempo"
+              }
+            },
+            {
+              "value": "error",
+              "label": {
+                "en": "Other error",
+                "fr": "Autre erreur",
+                "de": "Anderer Fehler",
+                "es": "Otro error"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "printer_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        },
+        {
+          "key": "reason",
+          "type": "string",
+          "label": {
+            "en": "Reason",
+            "fr": "Raison",
+            "de": "Grund",
+            "es": "Motivo"
+          }
+        },
+        {
+          "key": "error",
+          "type": "string",
+          "label": {
+            "en": "Error",
+            "fr": "Erreur",
+            "de": "Fehler",
+            "es": "Error"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "print_ticket",
+      "label": {
+        "en": "Print a ticket",
+        "fr": "Imprimer un ticket",
+        "de": "Beleg drucken",
+        "es": "Imprimir un ticket"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "A text with scene variables, an optional title, date and QR code, then a cut. \\n starts a new line.",
+        "fr": "Un texte avec variables de scène, en option titre, date et QR code, puis la coupe. \\n va à la ligne.",
+        "de": "Ein Text mit Szenenvariablen, optional Titel, Datum und QR-Code, dann der Schnitt. \\n beginnt eine neue Zeile.",
+        "es": "Un texto con variables de escena, opcionalmente título, fecha y código QR, y luego el corte. \\n inicia una nueva línea."
+      },
+      "timeout_seconds": 45,
       "fields": [
         {
-          "key": "device",
+          "key": "printer",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          },
           "required": true
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          },
+          "placeholder": {
+            "en": "e.g. Shopping list",
+            "fr": "ex. Liste de courses",
+            "de": "z. B. Einkaufsliste",
+            "es": "p. ej. Lista de la compra"
+          }
+        },
+        {
+          "key": "title_style",
+          "type": "select",
+          "label": {
+            "en": "Title style",
+            "fr": "Style du titre",
+            "de": "Titelstil",
+            "es": "Estilo del título"
+          },
+          "default": "large",
+          "options": [
+            {
+              "value": "large",
+              "label": {
+                "en": "Large and bold",
+                "fr": "Grand et gras",
+                "de": "Groß und fett",
+                "es": "Grande y en negrita"
+              }
+            },
+            {
+              "value": "tall",
+              "label": {
+                "en": "Double height, bold",
+                "fr": "Double hauteur, gras",
+                "de": "Doppelte Höhe, fett",
+                "es": "Doble altura, negrita"
+              }
+            },
+            {
+              "value": "bold",
+              "label": {
+                "en": "Bold",
+                "fr": "Gras",
+                "de": "Fett",
+                "es": "Negrita"
+              }
+            }
+          ]
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Text",
+            "fr": "Texte",
+            "de": "Text",
+            "es": "Texto"
+          },
+          "placeholder": {
+            "en": "Milk\\nBread\\nCoffee",
+            "fr": "Lait\\nPain\\nCafé",
+            "de": "Milch\\nBrot\\nKaffee",
+            "es": "Leche\\nPan\\nCafé"
+          },
+          "required": true
+        },
+        {
+          "key": "print_date",
+          "type": "boolean",
+          "label": {
+            "en": "Print the date and time",
+            "fr": "Imprimer la date et l'heure",
+            "de": "Datum und Uhrzeit drucken",
+            "es": "Imprimir la fecha y la hora"
+          },
+          "default": false
+        },
+        {
+          "key": "qr_code",
+          "type": "string",
+          "label": {
+            "en": "QR code (link or text)",
+            "fr": "QR code (lien ou texte)",
+            "de": "QR-Code (Link oder Text)",
+            "es": "Código QR (enlace o texto)"
+          },
+          "placeholder": {
+            "en": "e.g. https://…",
+            "fr": "ex. https://…",
+            "de": "z. B. https://…",
+            "es": "p. ej. https://…"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "ticket_number",
+          "type": "number",
+          "label": {
+            "en": "Tickets printed on this printer",
+            "fr": "Tickets imprimés sur cette imprimante",
+            "de": "Gedruckte Belege auf diesem Drucker",
+            "es": "Tickets impresos en esta impresora"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "ticket_printer",
+      "label": {
+        "en": "Ticket printer",
+        "fr": "Imprimante de tickets",
+        "de": "Bondrucker",
+        "es": "Impresora de tickets"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Printer status, tickets of the day, and buttons to print a note or a test ticket.",
+        "fr": "État des imprimantes, tickets du jour, et boutons pour imprimer un mot ou un ticket de test.",
+        "de": "Druckerstatus, heutige Belege und Knöpfe, um eine Notiz oder einen Testbeleg zu drucken.",
+        "es": "Estado de las impresoras, tickets del día y botones para imprimir una nota o un ticket de prueba."
+      },
+      "icon": "printer",
+      "action_timeout_seconds": 45,
+      "settings": [
+        {
+          "key": "printer",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          },
+          "required": false,
+          "description": {
+            "en": "Empty: every printer; the buttons show when there is only one.",
+            "fr": "Vide : toutes les imprimantes ; les boutons s'affichent s'il n'y en a qu'une.",
+            "de": "Leer: alle Drucker; die Knöpfe erscheinen, wenn es nur einen gibt.",
+            "es": "Vacío: todas las impresoras; los botones aparecen si solo hay una."
+          }
+        },
+        {
+          "key": "show_print_button",
+          "type": "boolean",
+          "label": {
+            "en": "“Print a note” button",
+            "fr": "Bouton « Imprimer un mot »",
+            "de": "Knopf „Notiz drucken“",
+            "es": "Botón «Imprimir una nota»"
+          },
+          "default": true
+        },
+        {
+          "key": "show_test_button",
+          "type": "boolean",
+          "label": {
+            "en": "“Test ticket” button",
+            "fr": "Bouton « Ticket de test »",
+            "de": "Knopf „Testbeleg“",
+            "es": "Botón «Ticket de prueba»"
+          },
+          "default": true
+        }
+      ]
     }
   ]
 }
